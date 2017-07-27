@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Canvas</title>
+  </head>
+  <body>
+    <canvas id="canvas" width="300" height="300"></canvas>
+
+    <script type="text/javascript">
+      let canvas = document.getElementById("canvas");
+      let ctx = canvas.getContext("2d");
+
+      let circle = function(x, y, radius, filled) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI*2, false);
+        if(filled) {
+          ctx.fill();
+        }
+        else
+          ctx.stroke();
+      }
+
+      let snowman = function(x, y) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "Black";
+        ctx.fillStyle = "Black";
+        circle(x, y, 20, false);
+        circle(x, y + 50, 30, false);
+        circle(x-7, y-5, 3, true);
+        circle(x+7, y-5, 3, true);
+
+        circle(x, y+35, 3, true);
+        circle(x, y+48, 3, true);
+        circle(x, y+60, 3, true);
+
+        ctx.fillStyle = "Orange";
+        circle(x, y+7, 4, true);
+      }
+
+
+      snowman(50, 50);
+      snowman(150, 50);
+
+    </script>
+  </body>
+</html>

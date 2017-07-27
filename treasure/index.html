@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Interactive Programming</title>
+  </head>
+  <body>
+    <h1 id="heading">Find the buried treasure!</h1>
+
+    <img id="map" width=800 height=800 src="http://nostarch.com/images/treasuremap.png" alt="">
+
+    <p id="distance"></p>
+    <p id="clicksRemaining"></p>
+
+    <script src="https://code.jquery.com/jquery-2.1.0.js"></script>
+    <script type="text/javascript">
+
+      let getRandomNumber = (n) => {
+        return Math.floor(Math.random() * n);
+      }
+
+      let getDistance = (e, target) => {
+        let diffX = e.offsetX - target.x;
+        let diffY = e.offsetY - target.y;
+        return Math.sqrt((diffX * diffX) + (diffY * diffY));
+      }
+
+      let getDistanceHint = (distance) => {
+        if(distance < 10) {
+          return "Boiling hot!";
+        }
+        if(distance < 20) {
+          return "Really hot";
+        }
+        if(distance < 40) {
+          return "Hot";
+        }
+        if(distance < 80) {
+          return "Warm";
+        }
+        if(distance < 160) {
+          return "Cold";
+        }
+        if(distance < 320) {
+          return "Really cold";
+        }
+        if(distance < 640) {
+          return "Really really cold!";
+        }
+
+        return "Freezing!";
+      }
+
+      let getClicksRemaining = (clicks) => {
+        return 20 - clicks;
+      }
+
+      let width = 800;
+      let height = 800;
+      let clicks = 0;
+
+      let target = {
+        x: getRandomNumber(width),
+        y: getRandomNumber(height)
+      };
+
+      $("#map").click((e) => {
+        clicks++;
+        let distance = getDistance(e, target);
+        let distanceHint = getDistanceHint(distance);
+        $("#distance").text(distanceHint);
+        $("#clicksRemaining").text(getClicksRemaining(clicks));
+        if(distance < 8) {
+          alert("Found the treasure in " + clicks + " clicks!");
+        }
+        if(clicks === 20) {
+          alert("Too many clicks! Game over!");
+        }
+      })
+
+
+    </script>
+  </body>
+</html>
