@@ -20,6 +20,8 @@
 
       var score = 0;
 
+      var isGameOver = false;
+
       var drawBorder = function() {
         ctx.fillStyle = "Gray";
         ctx.fillRect(0, 0, width, blockSize);
@@ -37,7 +39,7 @@
       }
 
       var gameOver = function() {
-        // clearInterval(intervalId);
+        isGameOver = true;
         ctx.font = "60px Courier";
         ctx.fillStyle = "Black";
         ctx.textAlign = "center";
@@ -187,20 +189,8 @@
         snake.draw();
         apple.draw();
         drawBorder();
-
         setTimeout(gameLoop, interval);
       }
-
-
-
-      // var intervalId = setInterval(function() {
-      //   ctx.clearRect(0, 0, width, height);
-      //   drawScore();
-      //   snake.move();
-      //   snake.draw();
-      //   apple.draw();
-      //   drawBorder();
-      // }, interval);
 
       var directions = {
         37: "left",
@@ -212,10 +202,13 @@
       gameLoop();
 
       $("body").keydown((e) => {
-        var newDirection = directions[e.keyCode];
-        if(newDirection !== undefined) {
-          snake.setDirection(newDirection);
+        if(!isGameOver){
+          var newDirection = directions[e.keyCode];
+          if(newDirection !== undefined) {
+            snake.setDirection(newDirection);
+          }
         }
+
       });
 
     </script>
