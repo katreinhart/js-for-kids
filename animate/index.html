@@ -29,9 +29,11 @@
         this.y = 100;
         this.xSpeed = Math.random() * 20 - 10;
         this.ySpeed = Math.random() * 20 - 10;
+        this.color = colors[Math.floor(Math.random() * 6)];
       };
 
       Ball.prototype.draw = function() {
+        ctx.fillStyle = this.color;
         circle(this.x, this.y, 30, true);
       }
 
@@ -46,13 +48,11 @@
       Ball.prototype.checkCollision = function() {
         if(this.x < 15 || this.x > width-15){
           this.xSpeed = -this.xSpeed;
-          ctx.fillStyle = colors[Math.floor(Math.random() * 6)];
         }
 
 
         if(this.y < 15 || this.y > height-15){
           this.ySpeed = -this.ySpeed;
-          ctx.fillStyle = colors[Math.floor(Math.random() * 6)];
         }
 
       }
