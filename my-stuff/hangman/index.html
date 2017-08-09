@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Hangman!</title>
+    <!-- <link rel="stylesheet" href="./styles.css"> -->
+  </head>
+  <body>
+    <h1>Hangman!</h1>
+    <canvas id="canvas" width="300" height="300"></canvas>
+
+    <script type="text/javascript">
+
+      // Initialize canvas
+      let canvas = document.getElementById("canvas");
+      let ctx = canvas.getContext("2d");
+      // Declare functions
+      var pickWord = function() {
+        var words = [
+          "javascript",
+          "monkey",
+          "amazing",
+          "pancake",
+          "fabulous",
+          "iterator",
+          "silver",
+          "notebook"
+        ];
+        var word = words[Math.floor(Math.random() * words.length)];
+        return word;
+      }
+
+      var setupAnswerArray = function() {
+        var answerArray = [];
+        for(var i = 0; i < word.length; i++){
+          answerArray[i] = "_";
+        }
+        return answerArray;
+      }
+
+      var showPlayerProgress = function() {
+        alert(answerArray.join(" "));
+      }
+
+      var getGuess = function() {
+        var guess = prompt("Guess a letter, or click cancel to quit");
+        return guess;
+      }
+
+      var updateGameState = function(guess, word, answerArray) {
+        var guessInWord = 0;
+
+        for (var j=0; j<word.length; j++) {
+          if(word[j] === guess && answerArray[j] === "_") {
+            answerArray[j] = guess;
+            guessInWord++;
+          }
+        }
+        return guessInWord;
+      }
+
+      // Draw the hangman for given state (wrong guesses = 0 to 9)
+      var drawHangMan = function(wrongGuesses) {
+        ctx.strokeStyle = "Purple";
+        ctx.lineWidth = 4;
+
+        switch(wrongGuesses) {
+          case 0:
+            break;
+          case 1:
+            ctx.beginPath();
+            ctx.moveTo(10, 10);
+            ctx.lineTo(10, 30);
+            ctx.stroke();
+            break;
+          case 2:
+            ctx.beginPath();
+            ctx.moveTo(10, 30);
+            ctx.lineTo(30, 30);
+            ctx.stroke();
+            break;
+          case 3:
+            ctx.beginPath();
+            ctx.moveTo(30, 30);
+            ctx.lineTo(30, 10);
+            ctx.stroke();
+            break;
+          case 4:
+            ctx.beginPath();
+            ctx.moveTo(30, 10);
+            ctx.lineTo(10, 10);
+            ctx.stroke();
+            break;
+          case 5:
+            ctx.beginPath();
+            ctx.moveTo(20, 30);
+            ctx.lineTo(20, 60);
+            ctx.stroke();
+            break;
+          case 6:
+            ctx.beginPath();
+            ctx.moveTo(20, 45);
+            ctx.lineTo(0, 30);
+            ctx.stroke();
+            break;
+          case 7:
+            ctx.beginPath();
+            ctx.moveTo(20, 45);
+            ctx.lineTo(40, 30);
+            ctx.stroke();
+            break;
+          case 8:
+            ctx.beginPath();
+            ctx.moveTo(20, 60);
+            ctx.lineTo(0, 100);
+            ctx.stroke();
+            break;
+          case 9:
+            ctx.beginPath();
+            ctx.moveTo(20, 60);
+            ctx.lineTo(40, 100);
+            ctx.stroke();
+            break;
+          default:
+            break;
+        }
+      }
+
+      var showAnswerAndCongratulatePlayer = function() {
+        alert(answerArray.join(" "));
+        alert("Good job! The answer was " + word);
+      }
+
+      var word = pickWord();
+      var answerArray = setupAnswerArray(word);
+      var remainingLetters = word.length;
+      var wrongGuesses = 0;
+      var correctGuesses = 0;
+
+      while(remainingLetters > 0) {
+        showPlayerProgress(answerArray);
+        for(var i = 0; i <= wrongGuesses; i++) {
+          drawHangMan(i);
+        }
+        
+        var guess = getGuess();
+        if(guess === null) {
+          break;
+        } else if (guess.length !== 1) {
+          alert("Please enter a single letter.");
+        } else {
+          var prevCorrectGuesses = correctGuesses;
+          correctThisRound = updateGameState(guess, word, answerArray);
+          correctGuesses += correctThisRound;
+          remainingLetters -= correctThisRound;
+          console.log("Correct: " + correctGuesses);
+          if(correctThisRound === 0) {
+            wrongGuesses ++;
+          }
+          console.log("Wrong: " + wrongGuesses);
+
+        }
+      }
+
+      showAnswerAndCongratulatePlayer(answerArray);
+
+    </script>
+  </body>
+</html>
