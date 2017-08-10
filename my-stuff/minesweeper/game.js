@@ -41,13 +41,26 @@ Square.prototype.click = function() {
 
 Square.prototype.draw = function() {
   if(this.clear) {
+    this.reveal();
+  }
+  ctx.strokeRect((this.x * blockSize + gutter), this.y * blockSize + gutter, blockSize, blockSize);
+}
+
+Square.prototype.reveal = function() {
+  if(this.neighbs === 0){
+    ctx.fillStyle = "LightGray";
+    ctx.fillRect((this.x * blockSize + gutter), this.y * blockSize + gutter, blockSize, blockSize);
+    ctx.strokeRect((this.x * blockSize + gutter), this.y * blockSize + gutter, blockSize, blockSize);
+
+    
+  }
+  if(this.neighbs !== 0){
     ctx.font = "24px Courier";
     ctx.fillStyle = "Black";
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillText(this.neighbs, this.x* blockSize + gutter + blockSize/4, this.y* blockSize + gutter);
   }
-  ctx.strokeRect((this.x * blockSize + gutter), this.y * blockSize + gutter, blockSize, blockSize);
 }
 
 Square.prototype.countNeighbors = function() {
@@ -102,15 +115,76 @@ var Grid = function() {
     if(!this.array[x][y].bomb){
       this.array[x][y].bomb = true;
       this.bombCount++;
-      this.array[x][y].draw();
+      // this.array[x][y].draw();
     }
   }
+
 }
 
-Grid.prototype.clear(x, y) {
+Grid.prototype.clear = function(x, y) {
   // find the contiguous 0 squares
   // clear them and their immediate neighbors
+  this.array[x][y].clear = true;
+  this.array[x][y].draw();
 
+  // this is messy, but i can't think of a more elegant solution this early in the AM
+  if(y > 0){
+    if(x > 0) {
+      if((this.array[x-1][y-1].countNeighbors() === 0) && !(this.array[x-1][y-1].clear)) {
+        this.clear(x-1, y-1);
+      } else {
+        this.array[x-1][y-1].reveal();
+      }
+    }
+    if((this.array[x ][y-1].countNeighbors() === 0) && !(this.array[x][y-1].clear)) {
+      this.clear(x, y-1);
+    } else {
+      this.array[x][y-1].reveal();
+    }
+    if(x < 9) {
+      if((this.array[x+1][y-1].countNeighbors() === 0) && !(this.array[x+1][y-1].clear)) {
+        this.clear(x+1, y-1);
+      } else {
+        this.array[x+1][y-1].reveal();
+      }
+    }
+  }
+  if(x > 0) {
+    if((this.array[x-1][y].countNeighbors() === 0) && !(this.array[x-1][y].clear)) {
+      this.clear(x-1, y);
+    } else {
+      this.array[x-1][y].reveal();
+    }
+  }
+  if(x < 9) {
+    if((this.array[x+1][y].countNeighbors() === 0) && !(this.array[x+1][y].clear)) {
+      this.clear(x+1, y);
+    } else {
+      this.array[x+1][y].reveal();
+    }
+  }
+
+  if(y < 9) {
+    if(x > 0) {
+      if((this.array[x-1][y+1].countNeighbors() === 0) && !(this.array[x-1][y+1].clear)) {
+        this.clear(x-1, y+1);
+      } else {
+        this.array[x-1][y+1].reveal();
+      }
+    }
+    if((this.array[x  ][y+1].countNeighbors() === 0) && !(this.array[x][y+1].clear)) {
+      this.clear(x, y+1);
+    } else {
+      this.array[x][y+1].reveal();
+    }
+    if(x < 9) {
+      if((this.array[x+1][y+1].countNeighbors() === 0) && !(this.array[x+1][y+1].clear)) {
+        this.clear(x+1, y+1);
+      } else {
+        this.array[x+1][y+1].reveal();
+      }
+    }
+  }
 }
 
 var displayScore = function() {
