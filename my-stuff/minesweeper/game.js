@@ -9,7 +9,8 @@ var numRows = 10;
 var numCols = 10;
 var blockSize = 30;
 var gutter = 10;
-var score = 0;
+var score = 10;
+var gameIsOver = false;
 
 var circle = function(x, y, radius, fill) {
   ctx.beginPath();
@@ -27,8 +28,8 @@ var Square = function(x, y) {
 
 Square.prototype.click = function() {
   if(this.bomb) {
-    circle(this.x* blockSize + gutter + blockSize/2, this.y* blockSize + gutter + blockSize/2, 10, true);
-    console.log("kaboom!");
+    this.reveal();
+    gameOver();
   } else {
     this.countNeighbors();
     if(this.neighbs === 0) {
@@ -47,16 +48,33 @@ Square.prototype.draw = function() {
 }
 
 Square.prototype.reveal = function() {
-  if(this.neighbs === 0){
+  if(this.bomb) {
+    circle(this.x* blockSize + gutter + blockSize/2, this.y* blockSize + gutter + blockSize/2, 10, true);
+  }
+  else if(this.neighbs === 0) {
     ctx.fillStyle = "LightGray";
     ctx.fillRect((this.x * blockSize + gutter), this.y * blockSize + gutter, blockSize, blockSize);
     ctx.strokeRect((this.x * blockSize + gutter), this.y * blockSize + gutter, blockSize, blockSize);
-
-    
   }
-  if(this.neighbs !== 0){
+  else if(this.neighbs !== 0) {
     ctx.font = "24px Courier";
-    ctx.fillStyle = "Black";
+    switch(this.neighbs) {
+      case 1:
+        ctx.fillStyle = "Blue";
+        break;
+      case 2:
+        ctx.fillStyle = "Green";
+        break;
+      case 3:
+        ctx.fillStyle = "Red";
+        break;
+      case 4:
+        ctx.fillStyle = "Purple";
+        break;
+      default:
+        ctx.fillStyle = "Black";
+    }
+    
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillText(this.neighbs, this.x* blockSize + gutter + blockSize/4, this.y* blockSize + gutter);
@@ -97,6 +115,14 @@ Square.prototype.countNeighbors = function() {
   return this.neighbs;
 }
 
+Square.prototype.mark = function() {
+  ctx.font = "24px Courier";
+  ctx.fillStyle = "Black";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("X", this.x* blockSize + gutter + blockSize/4, this.y* blockSize + gutter);
+}
+
 var Grid = function() {
 // instantiate the grid
   this.array = new Array(10);
@@ -115,19 +141,16 @@ var Grid = function() {
     if(!this.array[x][y].bomb){
       this.array[x][y].bomb = true;
       this.bombCount++;
-      // this.array[x][y].draw();
     }
   }
-
 }
 
 Grid.prototype.clear = function(x, y) {
   // find the contiguous 0 squares
-  // clear them and their immediate neighbors
+  // clear them and reveal their immediate neighbors
   this.array[x][y].clear = true;
   this.array[x][y].draw();
 
-  // this is messy, but i can't think of a more elegant solution this early in the AM
   if(y > 0){
     if(x > 0) {
       if((this.array[x-1][y-1].countNeighbors() === 0) && !(this.array[x-1][y-1].clear)) {
@@ -187,12 +210,32 @@ Grid.prototype.clear = function(x, y) {
   }
 }
 
-var displayScore = function() {
+var gameOver = function() {
+  gameIsOver = true;
+  for(i=0; i<9; i++) {
+    for(j=0; j<9; j++) {
+      if(grid.array[i][j].bomb === true) {
+        grid.array[i][j].reveal();
+      }
+    }
+  }
+  ctx.fillStyle="White";
+  ctx.fillRect(15, height-30, width-20, 28);
   ctx.font = "20px Courier";
   ctx.fillStyle = "Black";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText("Score: " + score, 15, height-30);
+  ctx.fillText("Game Over", 15, height-30);
+}
+
+var displayScore = function() {
+  ctx.fillStyle="White";
+  ctx.fillRect(15, height-30, width-20, 28);
+  ctx.font = "20px Courier";
+  ctx.fillStyle = "Black";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("Bombs left: " + score, 15, height-30);
 }
 
 ctx.strokeRect(0, 0, width, height);
@@ -200,14 +243,33 @@ var grid = new Grid();
 
 displayScore();
 
+$("body").contextmenu(function(e) {
+  if(e.ctrlKey) {
+
+    var x = Math.floor((e.pageX - gutter) / blockSize);
+    var y = Math.floor((e.pageY - gutter) / blockSize);
+    if((x > 9) || (y > 9)) {
+      return;
+    }
+
+    grid.array[x][y].mark();
+    score--;
+  }
+});
+
 $("body").click(function(e) {
-  var x = Math.floor((e.pageX - gutter) / blockSize);
-  var y = Math.floor((e.pageY - gutter) / blockSize);
+  var x = Math.floor((e.pageX - 2*gutter) / blockSize);
+  var y = Math.floor((e.pageY - 2*gutter) / blockSize);
+
   if((x > 9) || (y > 9)) {
     return;
   }
 
   grid.array[x][y].click();
-  displayScore();
+
+  if(!gameIsOver) {
+    displayScore();
+  }
+
 
 })
