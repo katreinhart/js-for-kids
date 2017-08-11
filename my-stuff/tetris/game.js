@@ -292,6 +292,33 @@ GameBoard.prototype.draw = function() {
   }
 }
 
+GameBoard.prototype.checkLine = function() {
+  // let score = 0;
+  for(let i=heightInBricks - 1; i>0; i--) {
+    let flag = true;
+    for(let j=0; j<widthInBricks; j++) {
+      if(this.board[i][j] === 0) {
+        flag = false;
+      }
+    }
+    if(flag) {
+      this.removeRow(i);
+      // score++;
+    }
+  }
+
+}
+
+GameBoard.prototype.removeRow = function(row) {
+  for(let i=row; i>0; i--) {
+    this.board[i] = this.board[i-1];
+  }
+  this.board[0] = new Array(widthInBricks);
+  for(let j=0; j<widthInBricks; j++){
+    this.board[0][j] = 0;
+  }
+}
+
 const drawScreen = function() {
   ctx.fillStyle = "White";
   ctx.fillRect(0, 0, width, height);
@@ -303,45 +330,44 @@ const drawScreen = function() {
   gameBoard.draw();
 }
 
-
 const gameBoard = new GameBoard();
-// gameBoard.draw();
 
 // set the game screen
-  drawScreen();
-  // gameBoard.draw();
+drawScreen();
+// gameBoard.draw();
 // select a random block
-  let rand = Math.floor(Math.random() * 7);
-  let activeBlock = new Block(blocks[rand]);
+let rand = Math.floor(Math.random() * 7);
+let activeBlock = new Block(blocks[rand]);
+activeBlock.display();
+
+let blockTimer = setInterval(() => {
+  activeBlock.moveDown();
+  drawScreen();
+  
+  gameBoard.checkLine();
+  activeBlock.update();
   activeBlock.display();
-
-  let blockTimer = setInterval(() => {
-    activeBlock.moveDown();
-    drawScreen();
+  if(!activeBlock.active) {
+    rand = Math.floor(Math.random() * 7);
+    activeBlock = new Block(blocks[rand]);
     gameBoard.draw();
+  }
 
-    activeBlock.update();
-    activeBlock.display();
-    if(!activeBlock.active) {
-      rand = Math.floor(Math.random() * 7);
-      activeBlock = new Block(blocks[rand]);
-      gameBoard.draw();
-    }
-
-    if(gameBoard.board[0][6] !== 0) {
-      clearInterval(blockTimer);
-      console.log("Game over");
-    }
-  }, 200);
+  if(gameBoard.board[0][6] !== 0) {
+    // the board is full, so the game is over
+    clearInterval(blockTimer);
+    console.log("Game over");
+  }
+}, 200);
 
 // listen for key press to rotate or move block
-  $("body").keydown((e) => {
-    activeBlock.move(keyNames[e.keyCode]);
-// refresh the game screen before re-drawing block
-    drawScreen();
-    gameBoard.draw();
-    activeBlock.display();
-  });
+$("body").keydown((e) => {
+  activeBlock.move(keyNames[e.keyCode]);
+
+  drawScreen();
+
+  activeBlock.display();
+});
 
 
 
