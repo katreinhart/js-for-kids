@@ -5,7 +5,7 @@ const ctx = canvas.getContext("2d");
 const width = canvas.width;
 const height = canvas.height;
 
-const widthInBricks = 10;
+const widthInBricks = 12;
 const heightInBricks = 20;
 
 const margin = 10;
@@ -209,8 +209,12 @@ Block.prototype.display = function() {
 Block.prototype.move = function(dir) {
   if(dir === "left"){
     // check each component and make sure it is not at edge of screen
+    // or adjacent to another block
     for(let i=0; i<4; i++){
-      if(this.components[i][0] === 0) {
+      let x = this.components[i][0];
+      let y = this.components[i][1];
+      if((x === 0) || (gameBoard.board[y][x-1] !== 0)) {
+
         return;
       }
     }
@@ -218,7 +222,11 @@ Block.prototype.move = function(dir) {
     this.update();
   } else if (dir === "right") {
     for(let i=0; i<4; i++) {
-      if(this.components[i][0] > widthInBricks) {
+      let x = this.components[i][0];
+      let y = this.components[i][1];
+      if((this.components[i][0] > widthInBricks) ||
+         (gameBoard.board[y][x+1] !== 0)) {
+
         return;
       }
     }
@@ -236,11 +244,20 @@ Block.prototype.rotate = function() {
 }
 
 Block.prototype.moveDown = function() {
-  
-  if(this.yPos < (heightInBricks)) {
-    this.yPos++;
-    this.update();
+  // check to see if anything is hindering downward movement...
+  // the bottom of the screen or an existing block
+  for(let i=0; i<4; i++) {
+    let x = this.components[i][0];
+    let y = this.components[i][1];
+    if((this.components[i][1] === heightInBricks - 1) ||
+       (gameBoard.board[y+1][x]) !== 0){
+      this.active = false;
+      gameBoard.add(this);
+      return;
+    }
   }
+  this.yPos++;
+  this.update();
 }
 
 const GameBoard = function() {
@@ -253,9 +270,13 @@ const GameBoard = function() {
   }
 }
 
-// GameBoard.prototype.add(block) {
-//
-// }
+GameBoard.prototype.add = function(block) {
+  for(let i=0; i<4; i++) {
+    let x = block.components[i][0];
+    let y = block.components[i][1];
+    this.board[y][x] = block.color;
+  }
+}
 
 // Gameboard.prototype.deleteRow(row) {
 //
@@ -265,7 +286,7 @@ GameBoard.prototype.draw = function() {
   for(let i=0; i<heightInBricks; i++) {
     for (let j=0; j<widthInBricks; j++) {
       if(this.board[i][j] !== 0) {
-        console.log("asdf");
+        drawBrick(this.board[i][j], j, i);
       }
     }
   }
@@ -278,17 +299,17 @@ const drawScreen = function() {
   ctx.strokeStyle = "DarkGrey";
   ctx.strokeRect(0, 0, width, height);
   ctx.strokeRect(margin, margin, width-2*margin, heightInBricks * brickSize);
+
+  gameBoard.draw();
 }
 
 
 const gameBoard = new GameBoard();
-gameBoard.draw();
-
-// let gameTimer = setInterval(() => {
+// gameBoard.draw();
 
 // set the game screen
   drawScreen();
-
+  // gameBoard.draw();
 // select a random block
   let rand = Math.floor(Math.random() * 7);
   let activeBlock = new Block(blocks[rand]);
@@ -297,8 +318,20 @@ gameBoard.draw();
   let blockTimer = setInterval(() => {
     activeBlock.moveDown();
     drawScreen();
+    gameBoard.draw();
+
     activeBlock.update();
     activeBlock.display();
+    if(!activeBlock.active) {
+      rand = Math.floor(Math.random() * 7);
+      activeBlock = new Block(blocks[rand]);
+      gameBoard.draw();
+    }
+
+    if(gameBoard.board[0][6] !== 0) {
+      clearInterval(blockTimer);
+      console.log("Game over");
+    }
   }, 200);
 
 // listen for key press to rotate or move block
@@ -306,6 +339,7 @@ gameBoard.draw();
     activeBlock.move(keyNames[e.keyCode]);
 // refresh the game screen before re-drawing block
     drawScreen();
+    gameBoard.draw();
     activeBlock.display();
   });
 
