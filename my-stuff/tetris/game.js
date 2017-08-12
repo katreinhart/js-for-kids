@@ -208,13 +208,10 @@ Block.prototype.display = function() {
 
 Block.prototype.move = function(dir) {
   if(dir === "left"){
-    // check each component and make sure it is not at edge of screen
-    // or adjacent to another block
     for(let i=0; i<4; i++){
       let x = this.components[i][0];
       let y = this.components[i][1];
       if((x === 0) || (gameBoard.board[y][x-1] !== 0)) {
-
         return;
       }
     }
@@ -226,15 +223,17 @@ Block.prototype.move = function(dir) {
       let y = this.components[i][1];
       if((this.components[i][0] > widthInBricks) ||
          (gameBoard.board[y][x+1] !== 0)) {
-
         return;
       }
     }
     this.xPos ++;
     this.update();
   } else if(dir === "up") {
+    // I haven't figured out how to (easily) prevent rotating into an existing block... bug.
     this.rotate();
     this.update();
+  } else if (dir === "down")  {
+    this.moveDown();
   }
 }
 
@@ -278,10 +277,6 @@ GameBoard.prototype.add = function(block) {
   }
 }
 
-// Gameboard.prototype.deleteRow(row) {
-//
-// }
-
 GameBoard.prototype.draw = function() {
   for(let i=0; i<heightInBricks; i++) {
     for (let j=0; j<widthInBricks; j++) {
@@ -293,7 +288,6 @@ GameBoard.prototype.draw = function() {
 }
 
 GameBoard.prototype.checkLine = function() {
-  // let score = 0;
   for(let i=heightInBricks - 1; i>0; i--) {
     let flag = true;
     for(let j=0; j<widthInBricks; j++) {
@@ -303,10 +297,9 @@ GameBoard.prototype.checkLine = function() {
     }
     if(flag) {
       this.removeRow(i);
-      // score++;
+      score ++;
     }
   }
-
 }
 
 GameBoard.prototype.removeRow = function(row) {
@@ -319,6 +312,16 @@ GameBoard.prototype.removeRow = function(row) {
   }
 }
 
+const displayScore = function() {
+  ctx.fillStyle="White";
+  ctx.fillRect(margin, heightInBricks * brickSize + 2*margin, 300, 50);
+  ctx.font = "20px Courier";
+  ctx.fillStyle = "Black";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("Lines: " + score, 3*margin, heightInBricks * brickSize + 4*margin);
+}
+
 const drawScreen = function() {
   ctx.fillStyle = "White";
   ctx.fillRect(0, 0, width, height);
@@ -328,22 +331,23 @@ const drawScreen = function() {
   ctx.strokeRect(margin, margin, width-2*margin, heightInBricks * brickSize);
 
   gameBoard.draw();
+  displayScore();
 }
 
 const gameBoard = new GameBoard();
 
-// set the game screen
+let score = 0;
+
+
 drawScreen();
-// gameBoard.draw();
-// select a random block
 let rand = Math.floor(Math.random() * 7);
 let activeBlock = new Block(blocks[rand]);
 activeBlock.display();
 
 let blockTimer = setInterval(() => {
+
   activeBlock.moveDown();
   drawScreen();
-  
   gameBoard.checkLine();
   activeBlock.update();
   activeBlock.display();
@@ -356,19 +360,24 @@ let blockTimer = setInterval(() => {
   if(gameBoard.board[0][6] !== 0) {
     // the board is full, so the game is over
     clearInterval(blockTimer);
-    console.log("Game over");
+    activeBlock = null;
+    ctx.fillStyle="White";
+    ctx.fillRect(margin, heightInBricks * brickSize + 2*margin, 300, 50);
+    ctx.font = "20px Courier";
+    ctx.fillStyle = "Black";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText("Game Over", 3*margin, heightInBricks * brickSize + 4*margin);
+    ctx.fillText("Final score: " + score, 3*margin, heightInBricks * brickSize + 8*margin);
   }
 }, 200);
 
 // listen for key press to rotate or move block
 $("body").keydown((e) => {
-  activeBlock.move(keyNames[e.keyCode]);
+  if(activeBlock) {
+    activeBlock.move(keyNames[e.keyCode]);
+    drawScreen();
+    activeBlock.display();
+  }
 
-  drawScreen();
-
-  activeBlock.display();
 });
-
-
-
-// }, 200)
