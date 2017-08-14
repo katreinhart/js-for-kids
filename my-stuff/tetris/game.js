@@ -234,6 +234,8 @@ Block.prototype.move = function(dir) {
     this.update();
   } else if (dir === "down")  {
     this.moveDown();
+  } else if (dir === "space") {
+    this.drop();
   }
 }
 
@@ -259,6 +261,12 @@ Block.prototype.moveDown = function() {
   this.update();
 }
 
+Block.prototype.drop = function() {
+  // Called when space bar is pressed.
+  // Drops the block to the bottom of the screen, or onto existing bricks.
+
+}
+
 const GameBoard = function() {
   this.board = new Array(heightInBricks);
   for(let i=0; i<heightInBricks; i++) {
@@ -267,6 +275,10 @@ const GameBoard = function() {
       this.board[i][j] = 0;
     }
   }
+
+  this.score = 0;
+  this.level = 1;
+  this.timer = 300;
 }
 
 GameBoard.prototype.add = function(block) {
@@ -297,8 +309,20 @@ GameBoard.prototype.checkLine = function() {
     }
     if(flag) {
       this.removeRow(i);
-      score ++;
+      this.updateScore();
     }
+  }
+}
+
+GameBoard.prototype.updateScore = function() {
+  this.score ++;
+  if(this.score % 10 === 0) {
+    this.level ++;
+    this.timer -= 25;
+    clearInterval(blockTimer);
+    blockTimer = setInterval(() => {
+      gameBoard.update();
+    }, this.timer);
   }
 }
 
@@ -312,14 +336,46 @@ GameBoard.prototype.removeRow = function(row) {
   }
 }
 
-const displayScore = function() {
+GameBoard.prototype.update = function() {
+  activeBlock.moveDown();
+  drawScreen();
+  this.checkLine();
+  activeBlock.update();
+  activeBlock.display();
+  if(!activeBlock.active) {
+    rand = Math.floor(Math.random() * 7);
+    activeBlock = new Block(blocks[rand]);
+    this.draw();
+  }
+
+  if(this.board[0][6] !== 0) {
+    // the board is full, so the game is over
+    this.gameOver();
+  }
+}
+
+GameBoard.prototype.gameOver = function() {
+  clearInterval(blockTimer);
+  activeBlock = null;
   ctx.fillStyle="White";
-  ctx.fillRect(margin, heightInBricks * brickSize + 2*margin, 300, 50);
+  ctx.fillRect(margin, heightInBricks * brickSize + 2*margin, 300, 100);
   ctx.font = "20px Courier";
   ctx.fillStyle = "Black";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText("Lines: " + score, 3*margin, heightInBricks * brickSize + 4*margin);
+  ctx.fillText("Game Over", 3*margin, heightInBricks * brickSize + 4*margin);
+  ctx.fillText("Final score: " + this.score, 3*margin, heightInBricks * brickSize + 8*margin);
+}
+
+GameBoard.prototype.displayScore = function() {
+  ctx.fillStyle="White";
+  ctx.fillRect(margin, heightInBricks * brickSize + 2*margin, 300, 100);
+  ctx.font = "20px Courier";
+  ctx.fillStyle = "Black";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("Lines: " + this.score, 3*margin, heightInBricks * brickSize + 4*margin);
+  ctx.fillText("Level: " + this.level, 3*margin, heightInBricks * brickSize + 8*margin)
 }
 
 const drawScreen = function() {
@@ -331,46 +387,21 @@ const drawScreen = function() {
   ctx.strokeRect(margin, margin, width-2*margin, heightInBricks * brickSize);
 
   gameBoard.draw();
-  displayScore();
+  gameBoard.displayScore();
 }
 
 const gameBoard = new GameBoard();
 
-let score = 0;
-
-
 drawScreen();
 let rand = Math.floor(Math.random() * 7);
 let activeBlock = new Block(blocks[rand]);
+
 activeBlock.display();
 
 let blockTimer = setInterval(() => {
+  gameBoard.update();
 
-  activeBlock.moveDown();
-  drawScreen();
-  gameBoard.checkLine();
-  activeBlock.update();
-  activeBlock.display();
-  if(!activeBlock.active) {
-    rand = Math.floor(Math.random() * 7);
-    activeBlock = new Block(blocks[rand]);
-    gameBoard.draw();
-  }
-
-  if(gameBoard.board[0][6] !== 0) {
-    // the board is full, so the game is over
-    clearInterval(blockTimer);
-    activeBlock = null;
-    ctx.fillStyle="White";
-    ctx.fillRect(margin, heightInBricks * brickSize + 2*margin, 300, 50);
-    ctx.font = "20px Courier";
-    ctx.fillStyle = "Black";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillText("Game Over", 3*margin, heightInBricks * brickSize + 4*margin);
-    ctx.fillText("Final score: " + score, 3*margin, heightInBricks * brickSize + 8*margin);
-  }
-}, 200);
+}, gameBoard.timer);
 
 // listen for key press to rotate or move block
 $("body").keydown((e) => {
