@@ -262,8 +262,9 @@ Block.prototype.moveDown = function() {
 }
 
 Block.prototype.drop = function() {
-  // Called when space bar is pressed.
-  // Drops the block to the bottom of the screen, or onto existing bricks.
+  while(this.active) {
+    this.moveDown();
+  }
 
 }
 
